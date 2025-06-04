@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRPCOM URL Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Mencegah scrollbar horizontal yang tidak perlu */
+            overflow-x: hidden;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            max-width: 900px;
+            width: 95%; /* Menggunakan persentase untuk responsivitas */
+            margin: 2rem auto; /* Menambahkan margin atas dan bawah */
+        }
+        textarea {
+            resize: vertical;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            background-color: #f3f4f6; /* Warna abu-abu muda untuk area pre */
+            border: 1px solid #d1d5db; /* Border abu-abu */
+            border-radius: 0.5rem; /* Sudut membulat */
+            padding: 1rem; /* Padding internal */
+            color: #1f2937; /* Warna teks gelap */
+            font-size: 0.875rem; /* Ukuran font lebih kecil untuk kode */
+            overflow-x: auto; /* Scroll horizontal jika konten terlalu panjang */
+            min-height: 150px; /* Tinggi minimum */
+        }
+        /* Styling untuk message box */
+        .message-box {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .message-box.success {
+            background-color: #d1fae5; /* Hijau muda */
+            color: #065f46; /* Hijau tua */
+        }
+        .message-box.error {
+            background-color: #fee2e2; /* Merah muda */
+            color: #991b1b; /* Merah tua */
+        }
+        .message-box.info {
+            background-color: #dbeafe; /* Biru muda */
+            color: #1e40af; /* Biru tua */
+        }
+        /* Tombol yang lebih menarik secara visual */
+        .action-button {
+            font-weight: 600; /* Sedikit lebih tebal */
+            padding: 0.625rem 1.5rem; /* Padding yang disesuaikan (py-2.5 px-6) */
+            border-radius: 0.5rem; /* Sudut membulat */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Bayangan halus */
+            transition: all 0.3s ease-in-out;
+            transform-origin: center;
+        }
+        .action-button:hover {
+            transform: scale(1.05); /* Efek hover sedikit membesar */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Bayangan lebih besar saat hover */
+        }
+        .action-button:active {
+            transform: scale(0.98); /* Efek klik sedikit mengecil */
+        }
+
+        /* Responsivitas untuk tombol */
+        @media (max-width: 768px) {
+            .button-grid {
+                /* Memastikan tombol cukup besar di layar kecil, bisa 2 kolom jika cukup */
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            }
+            .button-actions-group {
+                flex-direction: column; /* Tombol aksi akan bertumpuk pada layar kecil */
+                gap: 0.75rem; /* Jarak antar tombol yang bertumpuk, sedikit lebih besar */
+            }
+            .button-actions-group .action-button {
+                width: 100%; /* Tombol mengambil lebar penuh */
+            }
+        }
+         @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem; /* Padding lebih kecil untuk layar sangat kecil */
+            }
+            h1 {
+                font-size: 1.875rem; /* Ukuran font judul lebih kecil */
+            }
+            .action-button {
+                padding: 0.5rem 1rem; /* Padding tombol lebih kecil */
+                font-size: 0.875rem; /* Ukuran font tombol lebih kecil */
+            }
+            .button-grid {
+                 grid-template-columns: 1fr; /* Satu kolom untuk tombol paket di layar sangat kecil */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">SRPCOM URL CONVERTER</h1>
+        <div class="space-y-6">
+            <div>
+                <label for="proxyUriInput" class="block text-gray-700 font-medium mb-2">Masukkan URI Proxy (VMess, VLESS, Trojan) - Pisahkan dengan | atau ENTER:</label>
+                <textarea
+                    id="proxyUriInput"
+                    rows="5"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg bg-white"
+                    placeholder="Contoh:
+vmess://eyAid...
+vless://uuid@server:port?...
+trojan://password@server:port?...
+
+Atau:
+vmess://ey Aid... | vless://uuid@server:port?... | trojan://password@server:port?..."
+                ></textarea>
+            </div>
+
+            <!-- Grid untuk tombol agar lebih rapi -->
+            <!-- Mengubah lg:grid-cols-4 menjadi lg:grid-cols-3 dan xl:grid-cols-5 untuk mengakomodasi tombol baru -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 button-grid">
+                <button id="btnVidio" class="action-button bg-purple-600 hover:bg-purple-700 text-white">
+                    Paket Vidio (quiz.vidio.com)
+                </button>
+                <button id="btnXcvip" class="action-button bg-indigo-600 hover:bg-indigo-700 text-white">
+                    Paket XCVIP (xcvip.srpcom.online)
+                </button>
+                <button id="btnZoom" class="action-button bg-red-600 hover:bg-red-700 text-white">
+                    XCVIP WC (support.zoom.us)
+                </button>
+                <button id="btnVidioSni" class="action-button bg-green-600 hover:bg-green-700 text-white">
+                    vidioSNI
+                </button>
+                <button id="btnAvaWc" class="action-button bg-yellow-400 hover:bg-yellow-500 text-black">
+                    avaWC
+                </button>
+            </div>
+
+            <div class="flex justify-center mt-2">
+                <button id="btnConvert" class="action-button bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 text-base">
+                    Konversi ke YAML
+                </button>
+            </div>
+
+            <div>
+                <label for="yamlOutput" class="block text-gray-700 font-medium mb-2">Konfigurasi Proxy YAML:</label>
+                <pre id="yamlOutput"></pre>
+            </div>
+
+            <!-- Grup tombol aksi Salin dan Export -->
+            <div class="flex flex-col sm:flex-row justify-center gap-4 button-actions-group">
+                <button id="btnCopy" class="action-button bg-teal-600 hover:bg-teal-700 text-white">
+                    Salin YAML
+                </button>
+                <button id="btnExportTxt" class="action-button bg-orange-500 hover:bg-orange-600 text-white">
+                    Export ke .txt
+                </button>
+            </div>
+
+            <div id="messageBox" class="message-box" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Ambil elemen dari DOM
+        const proxyUriInputElement = document.getElementById('proxyUriInput');
+        const yamlOutputElement = document.getElementById('yamlOutput');
+        const messageBoxElement = document.getElementById('messageBox');
+
+        // Tombol-tombol
+        const btnVidio = document.getElementById('btnVidio');
+        const btnXcvip = document.getElementById('btnXcvip');
+        const btnZoom = document.getElementById('btnZoom');
+        const btnVidioSni = document.getElementById('btnVidioSni');
+        const btnAvaWc = document.getElementById('btnAvaWc'); // Tombol baru
+        const btnConvert = document.getElementById('btnConvert');
+        const btnCopy = document.getElementById('btnCopy');
+        const btnExportTxt = document.getElementById('btnExportTxt');
+
+        /**
+         * Menampilkan pesan di message box.
+         * @param {string} msg - Pesan yang akan ditampilkan.
+         * @param {string} type - Tipe pesan ('success', 'error', 'info').
+         */
+        function showMessage(msg, type) {
+            messageBoxElement.textContent = msg;
+            messageBoxElement.className = `message-box ${type}`; // Atur kelas untuk styling
+            messageBoxElement.style.display = 'block';
+            messageBoxElement.style.opacity = 1; // Pastikan terlihat
+
+            // Sembunyikan pesan setelah beberapa detik
+            setTimeout(() => {
+                messageBoxElement.style.opacity = 0;
+                setTimeout(() => { // Tunggu transisi selesai sebelum menyembunyikan
+                    messageBoxElement.style.display = 'none';
+                }, 500); // Sesuaikan dengan durasi transisi CSS
+            }, 3000);
+        }
+
+        /**
+         * Mendekode string Base64.
+         * @param {string} str - String Base64 yang dienkode.
+         * @returns {string} String yang telah didekode.
+         */
+        function decodeBase64(str) {
+            // Mengganti karakter yang tidak aman untuk URL
+            str = str.replace(/-/g, '+').replace(/_/g, '/');
+            // Menambahkan padding jika diperlukan
+            while (str.length % 4) {
+                str += '=';
+            }
+            try {
+                // Mendekode Base64 dan kemudian mendekode komponen URI
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            } catch (e) {
+                console.error("Gagal mendekode Base64:", e);
+                throw new Error('Gagal mendekode Base64 dari URI.');
+            }
+        }
+
+        /**
+         * Mengonversi URI VMess ke konfigurasi proxy YAML.
+         * @param {string} vmessUri - String URI VMess.
+         * @param {string} bugHost - Host yang digunakan untuk field 'server'.
+         * @param {boolean} isZoomMode - Flag untuk logika SNI/Host spesifik Zoom.
+         * @param {string} sniOverrideHost - Host spesifik untuk SNI/WS Host.
+         * @param {boolean} useBugAsServerOnly - Flag untuk menggunakan bugHost sebagai server dan host asli untuk header SNI/Host.
+         * @param {boolean} isAvaWcMode - Flag untuk mode avaWC.
+         * @returns {string} String konfigurasi YAML.
+         */
+        function convertVmessToYaml(vmessUri, bugHost, isZoomMode, sniOverrideHost, useBugAsServerOnly, isAvaWcMode) {
+            const base64EncodedJson = vmessUri.substring(8).trim(); 
+            if (!base64EncodedJson) {
+                throw new Error('URI VMess tidak valid: Bagian Base64 kosong.');
+            }
+
+            const decodedJsonString = decodeBase64(base64EncodedJson);
+            const config = JSON.parse(decodedJsonString);
+
+            const name = config.ps || 'VMess_Proxy';
+            const originalServer = config.add; // Ini adalah X1
+            const port = parseInt(config.port, 10);
+            const uuid = config.id;
+            const alterId = parseInt(config.aid || '0', 10);
+            const network = config.net || 'tcp';
+            const wsPath = config.path || '/';
+            const tls = config.tls === 'tls';
+
+            if (!originalServer || isNaN(port) || !uuid) {
+                throw new Error('URI VMess tidak lengkap: Server, port, atau UUID tidak ditemukan.');
+            }
+
+            let serverInYaml;
+            let servernameInYaml;
+            let hostHeaderInYaml;
+
+            if (isAvaWcMode) {
+                serverInYaml = 'ava.game.naver.com';
+                const avaWcCombinedHost = `ava.game.naver.com.${originalServer}`;
+                if (tls) {
+                    servernameInYaml = avaWcCombinedHost;
+                }
+                hostHeaderInYaml = avaWcCombinedHost; // Digunakan jika network adalah 'ws'
+            } else {
+                serverInYaml = originalServer; // Default
+                let actualSniSource = config.sni;
+                let actualHostSource = config.host;
+
+                if (sniOverrideHost) {
+                    serverInYaml = bugHost || originalServer;
+                    servernameInYaml = tls ? sniOverrideHost : undefined;
+                    hostHeaderInYaml = sniOverrideHost;
+                } else if (bugHost) {
+                    if (useBugAsServerOnly) {
+                        serverInYaml = bugHost;
+                        servernameInYaml = tls ? (actualSniSource || originalServer) : undefined;
+                        hostHeaderInYaml = actualHostSource || originalServer;
+                    } else if (isZoomMode) {
+                        serverInYaml = bugHost;
+                        servernameInYaml = tls ? `${bugHost}.${originalServer}` : undefined;
+                        hostHeaderInYaml = `${bugHost}.${originalServer}`;
+                    } else { // Generic bugHost mode
+                        serverInYaml = bugHost;
+                        servernameInYaml = tls ? (actualSniSource || bugHost) : undefined;
+                        hostHeaderInYaml = actualHostSource || bugHost;
+                    }
+                } else { // No bugHost, no sniOverrideHost
+                    serverInYaml = originalServer;
+                    servernameInYaml = tls ? (actualSniSource || originalServer) : undefined;
+                    hostHeaderInYaml = actualHostSource || originalServer;
+                }
+            }
+
+            let yamlConfig = `- name: ${name}\n`;
+            yamlConfig += `  type: vmess\n`;
+            yamlConfig += `  server: ${serverInYaml}\n`;
+            yamlConfig += `  port: ${port}\n`;
+            yamlConfig += `  uuid: ${uuid}\n`;
+            yamlConfig += `  alterId: ${alterId}\n`;
+            yamlConfig += `  cipher: auto\n`;
+            yamlConfig += `  tls: ${tls}\n`;
+            yamlConfig += `  skip-cert-verify: true\n`; // Selalu true untuk kemudahan
+            yamlConfig += `  network: ${network}\n`;
+
+            if (tls && servernameInYaml) {
+                yamlConfig += `  servername: ${servernameInYaml}\n`;
+            }
+
+            if (network === 'ws') {
+                yamlConfig += `  ws-opts:\n`;
+                yamlConfig += `    path: "${wsPath}"\n`;
+                yamlConfig += `    headers:\n`;
+                if (hostHeaderInYaml) {
+                    yamlConfig += `      Host: ${hostHeaderInYaml}\n`;
+                }
+            }
+            yamlConfig += `  udp: true\n`;
+            return yamlConfig;
+        }
+
+        /**
+         * Mengonversi URI VLESS ke konfigurasi proxy YAML.
+         * @param {string} vlessUri - String URI VLESS.
+         * @param {string} bugHost - Host yang digunakan untuk field 'server'.
+         * @param {boolean} isZoomMode - Flag untuk logika spesifik Zoom.
+         * @param {string} sniOverrideHost - Host spesifik untuk SNI/WS Host.
+         * @param {boolean} useBugAsServerOnly - Flag untuk menggunakan bugHost sebagai server dan host asli untuk header SNI/Host.
+         * @param {boolean} isAvaWcMode - Flag untuk mode avaWC.
+         * @returns {string} String konfigurasi YAML.
+         */
+        function convertVlessToYaml(vlessUri, bugHost, isZoomMode, sniOverrideHost, useBugAsServerOnly, isAvaWcMode) {
+            const parts = vlessUri.substring(8).split('?');
+            const authPart = parts[0];
+            const queryAndRemarkPart = parts.length > 1 ? parts[1] : '';
+
+            const authComponents = authPart.split('@');
+            if (authComponents.length !== 2) { throw new Error('URI VLESS tidak valid: Format UUID@server:port salah.'); }
+            const uuid = authComponents[0];
+            const serverPort = authComponents[1].split(':');
+            if (serverPort.length !== 2) { throw new Error('URI VLESS tidak valid: Format server:port salah.'); }
+            
+            const originalServer = serverPort[0]; // Ini adalah X1
+            const port = parseInt(serverPort[1], 10);
+            if (isNaN(port)) { throw new Error('URI VLESS tidak valid: Port harus berupa angka.'); }
+
+            let queryParams = {};
+            let remark = '';
+            if (queryAndRemarkPart) {
+                const hashIndex = queryAndRemarkPart.indexOf('#');
+                let queryString = queryAndRemarkPart;
+                if (hashIndex !== -1) {
+                    queryString = queryAndRemarkPart.substring(0, hashIndex);
+                    remark = decodeURIComponent(queryAndRemarkPart.substring(hashIndex + 1));
+                }
+                queryString.split('&').forEach(param => {
+                    const [key, value] = param.split('=');
+                    if (key && value) { queryParams[key] = decodeURIComponent(value); }
+                });
+            }
+            if (!remark) { remark = `vless-${originalServer}`; }
+
+            const tlsEnabled = queryParams.security === 'tls';
+            const networkType = queryParams.type || 'tcp';
+            const wsPath = queryParams.path || '/';
+
+            let serverInYaml;
+            let servernameInYaml;
+            let hostHeaderInYaml;
+
+            if (isAvaWcMode) {
+                serverInYaml = 'ava.game.naver.com';
+                const avaWcCombinedHost = `ava.game.naver.com.${originalServer}`;
+                if (tlsEnabled) {
+                    servernameInYaml = avaWcCombinedHost;
+                }
+                hostHeaderInYaml = avaWcCombinedHost;
+            } else {
+                serverInYaml = originalServer; // Default
+                let actualSniSource = queryParams.sni;
+                let actualHostSource = queryParams.host;
+
+                if (sniOverrideHost) {
+                    serverInYaml = bugHost || originalServer;
+                    servernameInYaml = tlsEnabled ? sniOverrideHost : undefined;
+                    hostHeaderInYaml = sniOverrideHost;
+                } else if (bugHost) {
+                    if (useBugAsServerOnly) {
+                        serverInYaml = bugHost;
+                        servernameInYaml = tlsEnabled ? (actualSniSource || originalServer) : undefined;
+                        hostHeaderInYaml = actualHostSource || originalServer;
+                    } else if (isZoomMode) {
+                        serverInYaml = bugHost;
+                        servernameInYaml = tlsEnabled ? `${bugHost}.${originalServer}` : undefined;
+                        hostHeaderInYaml = `${bugHost}.${originalServer}`;
+                    } else { 
+                        serverInYaml = bugHost;
+                        servernameInYaml = tlsEnabled ? (actualSniSource || bugHost) : undefined;
+                        hostHeaderInYaml = actualHostSource || bugHost;
+                    }
+                } else { 
+                    serverInYaml = originalServer;
+                    servernameInYaml = tlsEnabled ? (actualSniSource || originalServer) : undefined;
+                    hostHeaderInYaml = actualHostSource || originalServer;
+                }
+            }
+
+            let yamlConfig = `- name: ${remark}\n`;
+            yamlConfig += `  server: ${serverInYaml}\n`;
+            yamlConfig += `  port: ${port}\n`;
+            yamlConfig += `  type: vless\n`;
+            yamlConfig += `  uuid: ${uuid}\n`;
+            yamlConfig += `  cipher: auto\n`; 
+            yamlConfig += `  tls: ${tlsEnabled}\n`;
+            yamlConfig += `  skip-cert-verify: true\n`;
+            if (tlsEnabled && servernameInYaml) {
+                yamlConfig += `  servername: ${servernameInYaml}\n`;
+            }
+            yamlConfig += `  network: ${networkType}\n`;
+            if (networkType === 'ws') {
+                yamlConfig += `  ws-opts:\n`;
+                yamlConfig += `    path: "${wsPath}"\n`;
+                yamlConfig += `    headers:\n`;
+                if (hostHeaderInYaml) {
+                    yamlConfig += `      Host: ${hostHeaderInYaml}\n`;
+                }
+            }
+            yamlConfig += `  udp: true\n`;
+            return yamlConfig;
+        }
+
+        /**
+         * Mengonversi URI Trojan ke konfigurasi proxy YAML.
+         * @param {string} trojanUri - String URI Trojan.
+         * @param {string} bugHost - Host yang digunakan untuk field 'server'.
+         * @param {boolean} isZoomMode - Flag untuk logika spesifik Zoom.
+         * @param {string} sniOverrideHost - Host spesifik untuk SNI/WS Host.
+         * @param {boolean} useBugAsServerOnly - Flag untuk menggunakan bugHost sebagai server dan host asli untuk header SNI/Host.
+         * @param {boolean} isAvaWcMode - Flag untuk mode avaWC.
+         * @returns {string} String konfigurasi YAML.
+         */
+        function convertTrojanToYaml(trojanUri, bugHost, isZoomMode, sniOverrideHost, useBugAsServerOnly, isAvaWcMode) {
+            const parts = trojanUri.substring(9).split('?');
+            const authPart = parts[0];
+            const queryAndRemarkPart = parts.length > 1 ? parts[1] : '';
+
+            const authComponents = authPart.split('@');
+            if (authComponents.length !== 2) { throw new Error('URI Trojan tidak valid: Format password@server:port salah.'); }
+            const password = decodeURIComponent(authComponents[0]);
+            const serverPort = authComponents[1].split(':');
+            if (serverPort.length !== 2) { throw new Error('URI Trojan tidak valid: Format server:port salah.'); }
+            
+            const originalServer = serverPort[0]; // Ini adalah X1
+            const port = parseInt(serverPort[1], 10);
+            if (isNaN(port)) { throw new Error('URI Trojan tidak valid: Port harus berupa angka.'); }
+
+            let queryParams = {};
+            let remark = '';
+            if (queryAndRemarkPart) {
+                const hashIndex = queryAndRemarkPart.indexOf('#');
+                let queryString = queryAndRemarkPart;
+                if (hashIndex !== -1) {
+                    queryString = queryAndRemarkPart.substring(0, hashIndex);
+                    remark = decodeURIComponent(queryAndRemarkPart.substring(hashIndex + 1));
+                }
+                queryString.split('&').forEach(param => {
+                    const [key, value] = param.split('=');
+                    if (key && value) { queryParams[key] = decodeURIComponent(value); }
+                });
+            }
+            if (!remark) { remark = `trojan-${originalServer}`; }
+
+            const tls = true; // Trojan selalu TLS
+            const network = queryParams.type === 'ws' || queryParams.path ? 'ws' : 'tcp'; 
+            const wsPath = queryParams.path || '/';
+            
+            let serverInYaml;
+            let servernameInYaml;
+            let hostHeaderInYaml;
+
+            if (isAvaWcMode) {
+                serverInYaml = 'ava.game.naver.com';
+                const avaWcCombinedHost = `ava.game.naver.com.${originalServer}`;
+                // Trojan selalu TLS, jadi servernameInYaml akan selalu dipertimbangkan
+                servernameInYaml = avaWcCombinedHost;
+                hostHeaderInYaml = avaWcCombinedHost;
+            } else {
+                serverInYaml = originalServer; // Default
+                let actualSniSource = queryParams.sni;
+                let actualHostSource = queryParams.host;
+
+                if (sniOverrideHost) {
+                    serverInYaml = bugHost || originalServer;
+                    servernameInYaml = sniOverrideHost; // TLS selalu true untuk Trojan
+                    hostHeaderInYaml = sniOverrideHost;
+                } else if (bugHost) {
+                    if (useBugAsServerOnly) {
+                        serverInYaml = bugHost;
+                        servernameInYaml = actualSniSource || originalServer;
+                        hostHeaderInYaml = actualHostSource || originalServer;
+                    } else if (isZoomMode) {
+                        serverInYaml = bugHost;
+                        servernameInYaml = `${bugHost}.${originalServer}`;
+                        hostHeaderInYaml = `${bugHost}.${originalServer}`;
+                    } else { 
+                        serverInYaml = bugHost;
+                        servernameInYaml = actualSniSource || bugHost;
+                        hostHeaderInYaml = actualHostSource || bugHost;
+                    }
+                } else { 
+                    serverInYaml = originalServer;
+                    servernameInYaml = actualSniSource || originalServer;
+                    hostHeaderInYaml = actualHostSource || originalServer;
+                }
+            }
+
+            let yamlConfig = `- name: ${remark}\n`;
+            yamlConfig += `  type: trojan\n`;
+            yamlConfig += `  server: ${serverInYaml}\n`;
+            yamlConfig += `  port: ${port}\n`;
+            yamlConfig += `  password: "${password}"\n`;
+            yamlConfig += `  tls: ${tls}\n`; 
+            yamlConfig += `  skip-cert-verify: true\n`; // Selalu true untuk kemudahan
+            if (servernameInYaml) { // SNI untuk Trojan
+                yamlConfig += `  servername: ${servernameInYaml}\n`; 
+            }
+            yamlConfig += `  network: ${network}\n`;
+            if (network === 'ws') {
+                yamlConfig += `  ws-opts:\n`;
+                yamlConfig += `    path: "${wsPath}"\n`;
+                yamlConfig += `    headers:\n`;
+                if (hostHeaderInYaml) {
+                    yamlConfig += `      Host: ${hostHeaderInYaml}\n`;
+                }
+            }
+            yamlConfig += `  udp: ${queryParams.udp === 'true' ? 'true' : 'true'}\n`; 
+            return yamlConfig;
+        }
+        
+        /**
+         * Mengonversi satu URI proxy generik ke cuplikan konfigurasi proxy YAML.
+         * @param {string} proxyUri - String URI proxy.
+         * @param {string} bugHost - Host yang digunakan untuk field 'server'.
+         * @param {boolean} isZoomMode - Flag untuk logika spesifik Zoom.
+         * @param {string} sniOverrideHost - Host spesifik untuk SNI/WS Host.
+         * @param {boolean} useBugAsServerOnly - Flag untuk menggunakan bugHost sebagai server dan host asli untuk header SNI/Host.
+         * @param {boolean} isAvaWcMode - Flag untuk mode avaWC.
+         * @returns {string} Cuplikan konfigurasi YAML.
+         */
+        function convertSingleUriToYamlSnippet(proxyUri, bugHost, isZoomMode, sniOverrideHost, useBugAsServerOnly, isAvaWcMode) {
+            if (proxyUri.startsWith('vmess://')) {
+                return convertVmessToYaml(proxyUri, bugHost, isZoomMode, sniOverrideHost, useBugAsServerOnly, isAvaWcMode);
+            } else if (proxyUri.startsWith('vless://')) {
+                return convertVlessToYaml(proxyUri, bugHost, isZoomMode, sniOverrideHost, useBugAsServerOnly, isAvaWcMode);
+            } else if (proxyUri.startsWith('trojan://')) {
+                return convertTrojanToYaml(proxyUri, bugHost, isZoomMode, sniOverrideHost, useBugAsServerOnly, isAvaWcMode);
+            } else {
+                throw new Error('Format URI tidak dikenal. Harap masukkan URI VMess, VLESS, atau Trojan yang valid.');
+            }
+        }
+
+        /**
+         * Melakukan konversi URI input ke YAML.
+         * @param {object} options - Opsi untuk konversi.
+         * @param {string} [options.bugHost=''] - Host yang digunakan untuk field 'server'.
+         * @param {boolean} [options.isZoom=false] - Apakah menerapkan logika SNI/Host spesifik Zoom.
+         * @param {string} [options.sniOverrideHost=''] - Host spesifik untuk SNI/WS Host, server tetap asli.
+         * @param {boolean} [options.useBugAsServerOnly=false] - Gunakan bugHost untuk server, tetapi asli untuk SNI/Host.
+         * @param {boolean} [options.isAvaWcMode=false] - Flag untuk mode avaWC.
+         */
+        function performConversion(options = {}) {
+            const { bugHost = '', isZoom = false, sniOverrideHost = '', useBugAsServerOnly = false, isAvaWcMode = false } = options;
+            const rawInput = proxyUriInputElement.value.trim();
+
+            if (!rawInput) {
+                yamlOutputElement.textContent = '';
+                showMessage('Harap masukkan URI Proxy.', 'info');
+                return;
+            }
+
+            const uris = rawInput.split(/[|\n]+/).map(uri => uri.trim()).filter(uri => uri.length > 0);
+            let finalYaml = 'proxies:\n';
+            let successCount = 0;
+            let errorCount = 0;
+            let errorMessages = [];
+
+            uris.forEach(uri => {
+                try {
+                    finalYaml += convertSingleUriToYamlSnippet(uri, bugHost, isZoom, sniOverrideHost, useBugAsServerOnly, isAvaWcMode) + '\n';
+                    successCount++;
+                }
+                catch (error) {
+                    console.error("Error converting URI:", uri, error);
+                    errorMessages.push(`Error pada URI "${uri.substring(0,30)}...": ${error.message}`);
+                    errorCount++;
+                }
+            });
+
+            yamlOutputElement.textContent = finalYaml;
+            if (errorCount > 0) {
+                showMessage(`${successCount} URI berhasil dikonversi, ${errorCount} gagal. Error pertama: ${errorMessages[0]}`, 'error');
+            } else if (successCount > 0) {
+                showMessage('Konversi berhasil!', 'success');
+            } else {
+                showMessage('Tidak ada URI valid yang ditemukan untuk dikonversi.', 'info');
+            }
+        }
+
+        /**
+         * Menyalin teks ke clipboard.
+         */
+        function copyToClipboard() {
+            const textToCopy = yamlOutputElement.textContent;
+            if (textToCopy && !textToCopy.startsWith('Error:')) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        showMessage('YAML berhasil disalin ke clipboard!', 'success');
+                    }).catch(err => {
+                        console.error('Gagal menyalin dengan API Clipboard:', err);
+                        fallbackCopyToClipboard(textToCopy);
+                    });
+                } else {
+                    fallbackCopyToClipboard(textToCopy);
+                }
+            } else {
+                showMessage('Tidak ada YAML untuk disalin atau ada kesalahan.', 'info');
+            }
+        }
+
+        /**
+         * Fallback untuk menyalin teks ke clipboard menggunakan document.execCommand.
+         * @param {string} text - Teks yang akan disalin.
+         */
+        function fallbackCopyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed'; 
+            textarea.style.opacity = 0; 
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showMessage('YAML berhasil disalin ke clipboard! (fallback)', 'success');
+                } else {
+                    showMessage('Gagal menyalin YAML. Silakan salin secara manual.', 'error');
+                }
+            } catch (err) {
+                console.error('Gagal menyalin dengan execCommand:', err);
+                showMessage('Gagal menyalin YAML. Silakan salin secara manual.', 'error');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        /**
+         * Mengekstrak nama proxy pertama dari output YAML.
+         * @param {string} yamlText - Teks YAML.
+         * @returns {string} Nama proxy atau string kosong jika tidak ditemukan.
+         */
+        function extractFirstNameFromYaml(yamlText) {
+            if (!yamlText || typeof yamlText !== 'string') {
+                return '';
+            }
+            const lines = yamlText.split('\n');
+            for (const line of lines) {
+                const currentLine = line.trim(); 
+                if (currentLine.startsWith('- name:')) { 
+                    let nameValue = currentLine.substring(7).trim(); 
+                    if ((nameValue.startsWith('"') && nameValue.endsWith('"')) || (nameValue.startsWith("'") && nameValue.endsWith("'"))) {
+                        nameValue = nameValue.slice(1, -1);
+                    }
+                    return nameValue; 
+                }
+            }
+            return ''; 
+        }
+
+        /**
+         * Membersihkan nama file agar valid.
+         * @param {string} filename - Nama file asli.
+         * @returns {string} Nama file yang sudah dibersihkan.
+         */
+        function sanitizeFilename(filename) {
+            if (!filename) return 'config';
+            let sanitized = filename.replace(/[<>:"/\\|?*\s]+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '');
+            return sanitized.substring(0, 50) || 'config';
+        }
+
+
+        /**
+         * Mengekspor teks ke file .txt.
+         */
+        function exportToTxt() {
+            const textToExport = yamlOutputElement.textContent;
+            if (textToExport && !textToExport.startsWith('Error:') && !textToExport.startsWith('proxies:\n\n') && textToExport.trim() !== 'proxies:') {
+                try {
+                    const firstProxyName = extractFirstNameFromYaml(textToExport);
+                    const filename = sanitizeFilename(firstProxyName) + '.txt';
+
+                    const blob = new Blob([textToExport], { type: 'text/plain;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = filename;
+                    document.body.appendChild(link); 
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(link.href); 
+                    showMessage(`YAML berhasil diekspor ke ${filename}!`, 'success');
+                } catch (err) {
+                    console.error('Gagal mengekspor ke .txt:', err);
+                    showMessage('Gagal mengekspor YAML ke file .txt.', 'error');
+                }
+            } else {
+                showMessage('Tidak ada YAML valid untuk diekspor atau output kosong.', 'info');
+            }
+        }
+
+        // Menambahkan event listener ke tombol-tombol
+        btnVidio.addEventListener('click', () => performConversion({ bugHost: 'quiz.vidio.com', useBugAsServerOnly: true }));
+        btnXcvip.addEventListener('click', () => performConversion({ bugHost: 'xcvip.srpcom.online', useBugAsServerOnly: true }));
+        btnZoom.addEventListener('click', () => performConversion({ bugHost: 'support.zoom.us', isZoom: true }));
+        btnVidioSni.addEventListener('click', () => performConversion({ sniOverrideHost: 'quiz.vidio.com' }));
+        btnAvaWc.addEventListener('click', () => performConversion({ isAvaWcMode: true })); // Event listener untuk tombol avaWC
+        btnConvert.addEventListener('click', () => performConversion());
+        btnCopy.addEventListener('click', copyToClipboard);
+        btnExportTxt.addEventListener('click', exportToTxt);
+
+        // Pesan awal saat halaman dimuat
+        window.onload = () => {
+            proxyUriInputElement.value = ''; 
+            showMessage('Tempel URI Proxy Anda di atas dan pisahkan dengan | atau ENTER untuk beberapa URI, lalu klik Konversi atau pilih opsi Bug.', 'info');
+        };
+
+    </script>
+</body>
+</html>
